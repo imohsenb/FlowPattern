@@ -1,98 +1,31 @@
 package com.imohsenb.flowpattern
 
+import com.imohsenb.flowpattern.flow.FlowActivity
+import com.imohsenb.flowpattern.flow.StartAcFlowActivity
+import com.imohsenb.flowpattern.flow.ac.AcFlowContext
+import io.reactivex.SingleObserver
+import io.reactivex.disposables.Disposable
+
 class AirConditioner {
-
-    var currentTemp = 36
-
-    private var cooler = false
-
-    private var heater = false
-    private var isReady = false
-    private var errorExits = false
-
-    private var highTemp = 32
-    private var lowTemp = 24
-
-    fun start() {
-        println("Start Air conditioner")
-        checkSystem()
+    fun start(startTemp: Int) {
+        val context = AcFlowContext().apply { currentTemp = startTemp }
+        val flow = StartAcFlowActivity()
+        execute(flow, context)
     }
 
-    private fun checkSystem() {
-        if(isReady) {
-            checkTemperature()
-        }else if(errorExits){
-            systemError("unable starting system")
-        } else {
-            startingSystem()
-        }
-    }
+    private fun execute(flow: FlowActivity<AcFlowContext>, context: AcFlowContext) {
+        flow.run(context).subscribe(object : SingleObserver<FlowActivity<*>> {
+            override fun onSuccess(f: FlowActivity<*>?) {
+                execute(f as FlowActivity<AcFlowContext>, context)
+            }
 
-    private fun checkTemperature() {
+            override fun onSubscribe(d: Disposable?) {
+            }
 
-        if(currentTemp > highTemp) {
-            cooling()
-        } else if( currentTemp < lowTemp) {
-            heating()
-        } else {
-            turnOffDevices()
-        }
-    }
+            override fun onError(e: Throwable?) {
+                e?.printStackTrace()
+            }
+        })
 
-    private fun turnOffDevices() {
-        if(heater) {
-            println("HEATER:: stop")
-            heater = false
-        }
-        if(cooler) {
-            println("COOLER:: stop")
-            cooler = false
-        }
-
-    }
-
-    private fun heating() {
-        if(!heater) {
-            startHeater()
-        } else {
-            currentTemp++
-            println("HEATER:: +1 = $currentTemp")
-            checkTemperature()
-        }
-    }
-
-    private fun startHeater() {
-        println("HEATER:: start")
-        cooler = false
-        heater = true
-        checkTemperature()
-    }
-
-    private fun cooling() {
-        if(!cooler) {
-            startCooler()
-        } else {
-            currentTemp--
-            println("COOLER:: -1 = $currentTemp")
-            checkTemperature()
-        }
-    }
-
-    private fun startCooler() {
-        println("COOLER:: start")
-        cooler = true
-        heater = false
-        checkTemperature()
-    }
-
-    private fun systemError(msg: String) {
-        println("SYSTEM: error = $msg")
-    }
-
-    private fun startingSystem() {
-        println("SYSTEM: start...")
-        isReady = true
-        errorExits = false
-        checkSystem()
     }
 }
