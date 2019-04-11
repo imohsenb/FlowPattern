@@ -14,7 +14,8 @@ class AirConditioner {
     }
 
     private fun execute(flow: FlowActivity<AcFlowContext>, context: AcFlowContext) {
-        flow.run(context).subscribe(object : SingleObserver<FlowActivity<*>> {
+        flow.run(context)
+            .subscribe(object : SingleObserver<FlowActivity<*>> {
             override fun onSuccess(f: FlowActivity<*>?) {
                 execute(f as FlowActivity<AcFlowContext>, context)
             }
