@@ -40,7 +40,7 @@ harder and harder.
 So, let's break these states into another classes then we make good implementation of 
 SRP (Single Responsibility Principle) and life becomes easier.
 
-We called each class( that handle special state) `FlowActivity`. it has `run` method 
+We called each class( that handle special step) `FlowActivity`. it has `run` method 
 and simply it can return another `Activity`
 
 ```kotlin
@@ -90,7 +90,7 @@ class CheckSystemFlowActivity : FlowActivity {
 ```
 
 #### Context
-Another change we should do is about sharing data and state between flow activity
+Another change we should do is about sharing data and state between steps (implementations of flow FlowActivity)
 ```kotlin
 interface FlowContext 
 ```
