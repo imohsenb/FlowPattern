@@ -5,6 +5,8 @@ In this repository I would like to present flow pattern. this pattern maintain a
 solution can control flow decisions and transition them to next step of the
 flowchart after performing special action.
 
+[![Build Status](https://travis-ci.com/imohsenb/FlowPattern.svg?branch=master)](https://travis-ci.com/imohsenb/FlowPattern)
+
 Let's start with an example. Assume that we have an air conditioner class that handle 
 two devices(heater and cooler) and sensors with this flow:
 
