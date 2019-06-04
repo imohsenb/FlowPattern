@@ -1,4 +1,4 @@
-### Flow pattern
+## Flow pattern
 
 In this repository I would like to present flow pattern. this pattern maintain about
 `Step` (may not `State`) and not only concrete next and previous step and this 
@@ -10,7 +10,8 @@ two devices(heater and cooler) and sensors with this flow:
 
 <img alt="flowchart for flow pattern" src="https://github.com/imohsenb/FlowPattern/blob/master/flowchart.png" height="400"/>
 
-#### Simple Way
+### Implementation
+#### Simple implementation
 We can simply implement this signatures for the flow chart:
 ```kotlin
 class AirConditioner {
@@ -63,7 +64,7 @@ class CheckSystemFlowActivity: FlowActivity {
 }
 ```
 
-#### Advanced Way
+#### Advanced implementation through RX
 
 Last implementation of `FlowActivity` is only good for synchronize flows and it's to 
 hard to handle asynchronous process. So we change return type of `run` method in 
@@ -89,6 +90,29 @@ class CheckSystemFlowActivity : FlowActivity {
 }
 ```
 
+#### Advanced implementation through Kotlin Coroutine
+
+Using RX (Java or kotlin) is more complicated and reduce readability and it's not 
+straightforward. Let's change last implementation and makes it elegant through kotlin coroutine:
+```kotlin
+interface FlowActivity{
+    suspend fun run() : FlowActivity
+}
+```
+
+```kotlin
+class CheckSystemFlowActivity : FlowActivity {
+    suspend fun run(): FlowActivity {
+        return when {
+                       isReady -> CheckTemperatureFlowActivity()
+                       errorExits -> FailedFlowActivty("unable starting system")
+                       else -> StartingSystemFlowActivity()
+                    }
+    }
+}
+```
+as you can see, it looks like the synchronous implementation.
+
 #### Context
 Another change we should do is about sharing data and state between steps (implementations of flow FlowActivity)
 ```kotlin
@@ -108,7 +132,9 @@ class AcFlowContext : FlowContext {
     var errorExits = false
 }
 ```
-finally we refactor `checkSystem` activity
+finally we refactor `checkSystem` activity:
+
+#### Rx
 
 ```kotlin
 class CheckSystemAcFlowActivity : FlowActivity<AcFlowContext> {
@@ -126,10 +152,26 @@ class CheckSystemAcFlowActivity : FlowActivity<AcFlowContext> {
 }
 ```
 
-#### Execution
-Now, it's time to executing our flow for both simple way and advance way:
+#### Kotlin Coroutine 
 
-##### executing "Simple way"
+```kotlin
+class CheckSystemAcFlowActivity : FlowActivity<AcFlowContext> {
+    override suspend fun run(context: AcFlowContext): FlowActivity<AcFlowContext> {
+            context.apply {
+                return when {
+                    isReady -> CheckTemperatureAcFlowActivity()
+                    errorExits -> FailedFlowActivity("unable starting system")
+                    else -> StartingSystemAcFlowActivity()
+                }
+            }     
+    }
+}
+```
+
+### Execution
+Now, it's time to executing our flow for both simple way and advanced way:
+
+#### Executing Simple implementation
 Simply we can use a `while` loop to executing flows one after another until flow
 goes `null`.
 ```kotlin
@@ -143,8 +185,9 @@ fun start() {
 }
 
 ```
-##### executing "Advanced way"
+#### Executing Advanced implementation
 
+##### Rx
 ```kotlin
 fun start() {
     val flow = StartAcFlowActivity()
@@ -178,4 +221,18 @@ flow.run(context)
     .subscribeOn(Scheduler.from(ioExecutor))
     .observeOn(Scheduler.from(uiExecute))
     .subscribe()
+```
+
+  
+  
+##### Kotlin Coroutine
+
+```kotlin
+suspend fun start() {
+        val context = AcFlowContext().apply { currentTemp = startTemp }
+        var flow: FlowActivity<AcFlowContext>? = StartAcFlowActivity()
+        while (flow != null) {
+            flow = flow.run(context)
+        }
+}
 ```
